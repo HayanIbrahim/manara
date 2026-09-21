@@ -52,8 +52,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final isDesktop = SecurityService.instance.isDesktopPlatform ||
         MediaQuery.of(context).size.width >= 840;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
@@ -86,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 320,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.22),
+                    color: AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.08),
                   ),
                 ),
               ),
@@ -98,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 340,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.secondary.withValues(alpha: 0.18),
+                    color: AppColors.secondary.withValues(alpha: isDark ? 0.18 : 0.08),
                   ),
                 ),
               ),
@@ -106,7 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 top: 20,
                 right: 20,
                 child: IconButton(
-                  icon: const Icon(Icons.terminal_rounded, color: Colors.white70),
+                  icon: Icon(
+                    Icons.terminal_rounded,
+                    color: isDark ? Colors.white70 : AppColors.lightTextMuted,
+                  ),
                   tooltip: 'API Logs & Errors',
                   onPressed: () => ApiLogsDialog.show(context),
                 ),
@@ -149,8 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               l10n.translate('app_name'),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
@@ -220,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                  color: AppColors.textMuted,
+                                  color: AppColors.adaptiveTextMuted(context),
                                   size: 20,
                                 ),
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -260,7 +266,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () => context.push('/register'),
                               child: Text(
                                 l10n.translate('signup'),
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                style: TextStyle(
+                                  color: AppColors.adaptiveTextSecondary(context),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
 

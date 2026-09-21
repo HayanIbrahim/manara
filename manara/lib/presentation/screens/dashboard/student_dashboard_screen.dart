@@ -197,27 +197,27 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Learning Momentum',
                                   style: TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: theme.colorScheme.onSurface,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                const Text(
+                                Text(
                                   'Keep your streak going by finishing quizzes today!',
-                                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                  style: TextStyle(color: AppColors.adaptiveTextMuted(isDark), fontSize: 12),
                                 ),
                                 const SizedBox(height: 16),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
-                                  child: const LinearProgressIndicator(
+                                  child: LinearProgressIndicator(
                                     value: 0.72,
                                     minHeight: 8,
-                                    backgroundColor: AppColors.darkSurface,
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
+                                    backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+                                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
                                   ),
                                 ),
                               ],
@@ -265,8 +265,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     children: [
                       Text(
                         l10n.translate('enrolled_courses'),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -354,8 +354,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                           errorBuilder: (_, _, _) => Container(
                                             width: 90,
                                             height: 75,
-                                            color: AppColors.darkSurfaceElevated,
-                                            child: const Icon(Icons.book_rounded, color: AppColors.textMuted),
+                                            color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                                            child: Icon(Icons.book_rounded, color: AppColors.adaptiveTextMuted(isDark)),
                                           ),
                                         ),
                                       ),
@@ -367,8 +367,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                         children: [
                                           Text(
                                             course.name,
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
+                                            style: TextStyle(
+                                              color: theme.colorScheme.onSurface,
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -378,23 +378,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                           const SizedBox(height: 4),
                                           Text(
                                             course.tutorName ?? l10n.translate('tutor'),
-                                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                            style: TextStyle(color: AppColors.adaptiveTextSecondary(isDark), fontSize: 12),
                                           ),
                                           const SizedBox(height: 8),
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(4),
-                                            child: const LinearProgressIndicator(
+                                            child: LinearProgressIndicator(
                                               value: 0.60,
                                               minHeight: 5,
-                                              backgroundColor: AppColors.darkSurface,
-                                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                              backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+                                              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     const SizedBox(width: 10),
-                                    const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textMuted, size: 16),
+                                    Icon(Icons.arrow_forward_ios_rounded, color: AppColors.adaptiveTextMuted(isDark), size: 16),
                                   ],
                                 ),
                               ),
@@ -416,8 +416,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     l10n.translate('announcements'),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -455,8 +455,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                       children: [
                                         Text(
                                           item.title,
-                                          style: const TextStyle(
-                                            color: AppColors.textPrimary,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onSurface,
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -464,7 +464,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           item.body,
-                                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                          style: TextStyle(color: AppColors.adaptiveTextSecondary(isDark), fontSize: 12),
                                         ),
                                       ],
                                     ),
@@ -492,8 +492,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     children: [
                       Text(
                         l10n.translate('achievements'),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),

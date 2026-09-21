@@ -290,6 +290,8 @@ class _MobileGlassBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final selectedIndex = navigationShell.currentIndex;
 
     return ClipRRect(
@@ -297,9 +299,12 @@ class _MobileGlassBottomNav extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.glassBackground,
-            border: const Border(
-              top: BorderSide(color: AppColors.glassBorder, width: 1),
+            color: isDark ? AppColors.glassBackground : AppColors.lightGlassBackground,
+            border: Border(
+              top: BorderSide(
+                color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                width: 1,
+              ),
             ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -322,7 +327,7 @@ class _MobileGlassBottomNav extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.2)
+                          ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -331,14 +336,18 @@ class _MobileGlassBottomNav extends StatelessWidget {
                       children: [
                         Icon(
                           item.icon,
-                          color: isSelected ? AppColors.secondary : AppColors.textMuted,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? AppColors.textMuted : AppColors.lightTextMuted),
                           size: 22,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           item.label,
                           style: TextStyle(
-                            color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                            color: isSelected
+                                ? theme.colorScheme.onSurface
+                                : (isDark ? AppColors.textMuted : AppColors.lightTextMuted),
                             fontSize: 11,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),

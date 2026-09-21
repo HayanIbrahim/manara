@@ -16,14 +16,20 @@ class ShimmerSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated;
+    final highlight = isDark
+        ? AppColors.darkSurfaceElevated.withValues(alpha: 0.4)
+        : Colors.white.withValues(alpha: 0.8);
+
     return Shimmer.fromColors(
-      baseColor: AppColors.darkSurfaceElevated,
-      highlightColor: AppColors.darkSurfaceElevated.withValues(alpha: 0.4),
+      baseColor: base,
+      highlightColor: highlight,
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.darkSurfaceElevated,
+          color: base,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
@@ -36,13 +42,15 @@ class CourseCardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurfaceElevated.withValues(alpha: 0.5),
+        color: (isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.glassBorder),
+        border: Border.all(color: isDark ? AppColors.glassBorder : AppColors.lightBorder),
       ),
       child: Row(
         children: [

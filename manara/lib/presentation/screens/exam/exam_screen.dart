@@ -84,14 +84,28 @@ class _ExamScreenState extends State<ExamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('exams')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('exams'),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -133,8 +147,8 @@ class _ExamScreenState extends State<ExamScreen> {
                           children: [
                             Text(
                               exam.title,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -143,14 +157,17 @@ class _ExamScreenState extends State<ExamScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 exam.instructions!,
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                style: TextStyle(
+                                  color: AppColors.adaptiveTextSecondary(context),
+                                  fontSize: 13,
+                                ),
                               ),
                             ],
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.2),
+                                color: AppColors.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -185,13 +202,13 @@ class _ExamScreenState extends State<ExamScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: AppColors.darkSurfaceElevated,
+                                        color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
                                         '#${index + 1} • ${q.isMultipleChoice ? 'MCQ' : 'Written'}',
-                                        style: const TextStyle(
-                                          color: AppColors.textMuted,
+                                        style: TextStyle(
+                                          color: AppColors.adaptiveTextMuted(context),
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -202,8 +219,8 @@ class _ExamScreenState extends State<ExamScreen> {
                                 const SizedBox(height: 10),
                                 Text(
                                   q.prompt,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextPrimary(context),
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -232,11 +249,15 @@ class _ExamScreenState extends State<ExamScreen> {
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: isSelected
-                                                ? AppColors.primary.withValues(alpha: 0.2)
-                                                : AppColors.darkSurfaceElevated,
+                                                ? AppColors.primary.withValues(alpha: 0.15)
+                                                : (isDark
+                                                    ? AppColors.darkSurfaceElevated
+                                                    : AppColors.lightSurfaceElevated),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: isSelected ? AppColors.secondary : AppColors.glassBorder,
+                                              color: isSelected
+                                                  ? AppColors.secondary
+                                                  : (isDark ? AppColors.glassBorder : AppColors.lightGlassBorder),
                                             ),
                                           ),
                                           child: Row(
@@ -245,7 +266,7 @@ class _ExamScreenState extends State<ExamScreen> {
                                                 isSelected
                                                     ? Icons.radio_button_checked_rounded
                                                     : Icons.radio_button_off_rounded,
-                                                color: isSelected ? AppColors.secondary : AppColors.textMuted,
+                                                color: isSelected ? AppColors.secondary : AppColors.adaptiveTextMuted(context),
                                                 size: 18,
                                               ),
                                               const SizedBox(width: 12),
@@ -254,8 +275,8 @@ class _ExamScreenState extends State<ExamScreen> {
                                                   choice,
                                                   style: TextStyle(
                                                     color: isSelected
-                                                        ? AppColors.textPrimary
-                                                        : AppColors.textSecondary,
+                                                        ? AppColors.adaptiveTextPrimary(context)
+                                                        : AppColors.adaptiveTextSecondary(context),
                                                     fontSize: 14,
                                                   ),
                                                 ),
@@ -281,7 +302,10 @@ class _ExamScreenState extends State<ExamScreen> {
                                             ),
                                           );
                                     },
-                                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                                    style: TextStyle(
+                                      color: AppColors.adaptiveTextPrimary(context),
+                                      fontSize: 14,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: l10n.translate('written_answer_hint'),
                                     ),
@@ -305,8 +329,8 @@ class _ExamScreenState extends State<ExamScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   l10n.translate('upload_image'),
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextPrimary(context),
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -319,7 +343,10 @@ class _ExamScreenState extends State<ExamScreen> {
                                 Expanded(
                                   child: TextField(
                                     controller: _attachmentUrlController,
-                                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                                    style: TextStyle(
+                                      color: AppColors.adaptiveTextPrimary(context),
+                                      fontSize: 13,
+                                    ),
                                     decoration: const InputDecoration(
                                       hintText: 'Enter image URL (e.g. https://...)...',
                                     ),
@@ -344,8 +371,16 @@ class _ExamScreenState extends State<ExamScreen> {
                                 spacing: 8,
                                 children: attachmentUrls.map((url) {
                                   return Chip(
-                                    label: Text(url, style: const TextStyle(fontSize: 11)),
-                                    backgroundColor: AppColors.darkSurfaceElevated,
+                                    label: Text(
+                                      url,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.adaptiveTextPrimary(context),
+                                      ),
+                                    ),
+                                    backgroundColor: isDark
+                                        ? AppColors.darkSurfaceElevated
+                                        : AppColors.lightSurfaceElevated,
                                   );
                                 }).toList(),
                               ),
@@ -360,9 +395,13 @@ class _ExamScreenState extends State<ExamScreen> {
                 // Submit Bar
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: AppColors.darkSurface,
-                    border: Border(top: BorderSide(color: AppColors.glassBorder)),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                    border: Border(
+                      top: BorderSide(
+                        color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                      ),
+                    ),
                   ),
                   child: SafeArea(
                     child: GlowingGlassButton(
@@ -392,8 +431,8 @@ class _ExamScreenState extends State<ExamScreen> {
                       const SizedBox(height: 18),
                       Text(
                         l10n.translate('exam_submitted'),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextPrimary(context),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),

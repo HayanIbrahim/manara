@@ -65,26 +65,49 @@ class _AdminPermissionsScreenState extends State<AdminPermissionsScreen> {
       builder: (context, permState) {
         final isLoading = permState is AdminPermissionsLoading;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Text(
-                l10n.translate('permissions'),
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<AdminSubjectsBloc>().add(AdminFetchSubjectsRequested());
+            await Future.delayed(const Duration(milliseconds: 600));
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.translate('permissions'),
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Delegate tutor academic authority and grant direct student course enrollments',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton.filledTonal(
+                      icon: const Icon(Icons.refresh_rounded),
+                      tooltip: 'Refresh Permissions Data',
+                      onPressed: () {
+                        context.read<AdminSubjectsBloc>().add(AdminFetchSubjectsRequested());
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Delegate tutor academic authority and grant direct student course enrollments',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
               // Two Column Cards for Desktop
               LayoutBuilder(
@@ -159,8 +182,9 @@ class _AdminPermissionsScreenState extends State<AdminPermissionsScreen> {
               ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 

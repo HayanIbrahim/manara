@@ -43,13 +43,15 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: BlocConsumer<DesktopPairingBloc, DesktopPairingState>(
         listener: (context, state) {
@@ -84,7 +86,7 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.glassBorder,
+                      color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -97,8 +99,8 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
                     Expanded(
                       child: Text(
                         l10n.translate('mobile_scan_qr'),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextPrimary(context),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -107,7 +109,7 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
                     IconButton(
                       icon: Icon(
                         _isManualInput ? Icons.camera_alt_rounded : Icons.keyboard_rounded,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary(context),
                       ),
                       onPressed: () => setState(() => _isManualInput = !_isManualInput),
                     ),
@@ -116,7 +118,10 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.translate('mobile_approve_desc'),
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextMuted(context),
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -126,19 +131,25 @@ class _MobileQrScannerSheetState extends State<MobileQrScannerSheet> {
                     borderRadius: BorderRadius.circular(20),
                     child: _isManualInput
                         ? Container(
-                            color: AppColors.darkSurfaceElevated,
+                            color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
+                                Text(
                                   'Manual Challenge Input',
-                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextPrimary(context),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 14),
                                 TextField(
                                   controller: _manualCodeController,
-                                  style: const TextStyle(color: AppColors.textPrimary),
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextPrimary(context),
+                                  ),
                                   decoration: const InputDecoration(
                                     hintText: 'Paste or type desktop challenge string...',
                                   ),

@@ -76,27 +76,54 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
     final isDesktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
         title: BlocBuilder<CoursePlayerBloc, CoursePlayerState>(
           builder: (context, state) {
             if (state is CoursePlayerLoaded) {
               return Text(
                 state.activeLecture.title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.adaptiveTextPrimary(context),
+                ),
               );
             }
-            return const Text('Lecture Player');
+            return Text(
+              'Lecture Player',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.adaptiveTextPrimary(context),
+              ),
+            );
           },
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.secondary),
+            tooltip: 'Reload Course',
+            onPressed: () {
+              context.read<CoursePlayerBloc>().add(CoursePlayerLoadRequested(widget.courseId));
+            },
+          ),
+        ],
       ),
       body: BlocConsumer<CoursePlayerBloc, CoursePlayerState>(
         listener: (context, state) {
@@ -132,7 +159,10 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                       ),
                     ),
                   ),
-                  const VerticalDivider(width: 1, color: AppColors.glassBorder),
+                  VerticalDivider(
+                    width: 1,
+                    color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                  ),
                   // Right: Curriculum & Mandatory Quiz Drawer
                   Expanded(
                     flex: 4,
@@ -153,7 +183,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                   controller: _tabController,
                   indicatorColor: AppColors.secondary,
                   labelColor: AppColors.secondary,
-                  unselectedLabelColor: AppColors.textMuted,
+                  unselectedLabelColor: AppColors.adaptiveTextMuted(context),
                   tabs: [
                     Tab(text: l10n.translate('curriculum')),
                     Tab(text: l10n.translate('pdf_notes')),
@@ -336,8 +366,8 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
         const SizedBox(height: 10),
         Text(
           l10n.translate('curriculum'),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.adaptiveTextPrimary(context),
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -350,6 +380,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
             itemCount: lectures.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
               final lecture = lectures[index];
               final isSelected = lecture.id == active.id;
               final isUnlocked = state.isLectureUnlocked(lecture);
@@ -380,11 +411,17 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                       radius: 14,
                       backgroundColor: isSelected
                           ? AppColors.secondary
-                          : (isUnlocked ? AppColors.darkSurfaceElevated : Colors.white12),
+                          : (isUnlocked
+                              ? (isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated)
+                              : (isDark ? Colors.white12 : Colors.black12)),
                       child: Text(
                         '${lecture.position}',
                         style: TextStyle(
-                          color: isSelected ? Colors.black : (isUnlocked ? Colors.white : AppColors.textMuted),
+                          color: isSelected
+                              ? Colors.black
+                              : (isUnlocked
+                                  ? (isDark ? Colors.white : AppColors.lightTextPrimary)
+                                  : AppColors.adaptiveTextMuted(context)),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -395,7 +432,9 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                       child: Text(
                         lecture.title,
                         style: TextStyle(
-                          color: isUnlocked ? AppColors.textPrimary : AppColors.textMuted,
+                          color: isUnlocked
+                              ? AppColors.adaptiveTextPrimary(context)
+                              : AppColors.adaptiveTextMuted(context),
                           fontSize: 14,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                         ),
@@ -407,7 +446,7 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                           : Icons.lock_outline_rounded,
                       color: isSelected
                           ? AppColors.secondary
-                          : (isUnlocked ? AppColors.success : AppColors.textMuted),
+                          : (isUnlocked ? AppColors.success : AppColors.adaptiveTextMuted(context)),
                       size: 18,
                     ),
                   ],
@@ -421,18 +460,19 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
   }
 
   Widget _buildPdfViewerSection(LectureEntity lecture) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (lecture.pdfUrls.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.picture_as_pdf_outlined, color: AppColors.textMuted, size: 48),
-            SizedBox(height: 12),
+          children: [
+            Icon(Icons.picture_as_pdf_outlined, color: AppColors.adaptiveTextMuted(context), size: 48),
+            const SizedBox(height: 12),
             Text(
               'No PDF attachments for this lecture.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary(context), fontSize: 13),
             ),
           ],
         ),
@@ -445,9 +485,11 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.darkSurfaceElevated,
+          color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.glassBorder),
+          border: Border.all(
+            color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+          ),
         ),
         child: SfPdfViewer.network(pdfUrl),
       ),
@@ -459,10 +501,13 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.assignment_outlined, color: AppColors.textMuted, size: 48),
-            SizedBox(height: 12),
-            Text('No exams assigned for this course.', style: TextStyle(color: AppColors.textSecondary)),
+          children: [
+            Icon(Icons.assignment_outlined, color: AppColors.adaptiveTextMuted(context), size: 48),
+            const SizedBox(height: 12),
+            Text(
+              'No exams assigned for this course.',
+              style: TextStyle(color: AppColors.adaptiveTextSecondary(context)),
+            ),
           ],
         ),
       );
@@ -485,17 +530,28 @@ class _CoursePlayerScreenState extends State<CoursePlayerScreen> with SingleTick
                   children: [
                     Text(
                       exam.title,
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextPrimary(context),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${exam.points} Points • ${exam.questions.length} Questions',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextMuted(context),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textMuted, size: 16),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.adaptiveTextMuted(context),
+                size: 16,
+              ),
             ],
           ),
         );

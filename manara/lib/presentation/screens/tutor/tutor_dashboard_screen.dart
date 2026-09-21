@@ -46,11 +46,16 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.darkSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(l10n.translate('create_course'), style: const TextStyle(color: AppColors.textPrimary)),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              l10n.translate('create_course'),
+              style: TextStyle(color: AppColors.adaptiveTextPrimary(context)),
+            ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -143,9 +148,10 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 
   void _showAddExamDialog(BuildContext context, String courseId) {
     final titleCtrl = TextEditingController(text: 'Midterm Examination');
@@ -156,10 +162,15 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Create Course Exam', style: TextStyle(color: AppColors.textPrimary)),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Create Course Exam',
+            style: TextStyle(color: AppColors.adaptiveTextPrimary(context)),
+          ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -228,9 +239,10 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             child: const Text('Create Exam'),
           ),
         ],
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 
   void _showAddLectureDialog(BuildContext context, String courseId, int defaultPosition) {
     final titleCtrl = TextEditingController();
@@ -240,10 +252,15 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.translate('create_lecture'), style: const TextStyle(color: AppColors.textPrimary)),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            l10n.translate('create_lecture'),
+            style: TextStyle(color: AppColors.adaptiveTextPrimary(context)),
+          ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -290,9 +307,10 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             child: const Text('Save'),
           ),
         ],
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 
   void _showAddQuizDialog(BuildContext context, {String initialLectureId = ''}) {
     final lectureIdCtrl = TextEditingController(text: initialLectureId);
@@ -310,11 +328,16 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.darkSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Create Mandatory Quiz (5 Questions)', style: TextStyle(color: AppColors.textPrimary)),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              'Create Mandatory Quiz (5 Questions)',
+              style: TextStyle(color: AppColors.adaptiveTextPrimary(context)),
+            ),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
@@ -434,19 +457,36 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('tutor_dashboard')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('tutor_dashboard'),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.secondary),
+            tooltip: 'Refresh Courses',
+            onPressed: () => context.read<TutorBloc>().add(TutorLoadCoursesRequested()),
+          ),
           IconButton(
             icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.secondary),
             tooltip: 'Pair Desktop App',
@@ -478,101 +518,128 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
           final courses = state is TutorCoursesLoaded ? state.courses : <CourseEntity>[];
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              // Tutor Overview Stats
-              Row(
-                children: [
-                  Expanded(
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.school_outlined, color: AppColors.secondary, size: 24),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${courses.length}',
-                            style: const TextStyle(
-                                color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'My Courses',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                          ),
-                        ],
+          return RefreshIndicator(
+            color: AppColors.secondary,
+            backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+            onRefresh: () async {
+              context.read<TutorBloc>().add(TutorLoadCoursesRequested());
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              children: [
+                // Tutor Overview Stats
+                Row(
+                  children: [
+                    Expanded(
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.school_outlined, color: AppColors.secondary, size: 24),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${courses.length}',
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'My Courses',
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextMuted(context),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.assignment_turned_in_outlined, color: AppColors.gold, size: 24),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${courses.fold<int>(0, (sum, c) => sum + c.videoCount)}',
-                            style: const TextStyle(
-                                color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'Total Lectures',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.assignment_turned_in_outlined, color: AppColors.gold, size: 24),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${courses.fold<int>(0, (sum, c) => sum + c.videoCount)}',
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Total Lectures',
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextMuted(context),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Action buttons bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.translate('tutor_manage_courses'),
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.secondary,
-                      side: const BorderSide(color: AppColors.secondary),
-                    ),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: Text(l10n.translate('create_course')),
-                    onPressed: () => _showCreateCourseDialog(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              if (courses.isEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  alignment: Alignment.center,
-                  child: Column(
-                    children: const [
-                      Icon(Icons.school_outlined, size: 56, color: AppColors.textMuted),
-                      SizedBox(height: 12),
-                      Text(
-                        'No courses created yet',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Tap "Create Course" to publish your first academic syllabus under an assigned subject.',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
+                const SizedBox(height: 20),
+
+                // Action buttons bar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.translate('tutor_manage_courses'),
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextPrimary(context),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.secondary,
+                        side: const BorderSide(color: AppColors.secondary),
+                      ),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(l10n.translate('create_course')),
+                      onPressed: () => _showCreateCourseDialog(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                if (courses.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        Icon(Icons.school_outlined, size: 56, color: AppColors.adaptiveTextMuted(context)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No courses created yet',
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextPrimary(context),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Tap "Create Course" to publish your first academic syllabus under an assigned subject.',
+                          style: TextStyle(color: AppColors.adaptiveTextMuted(context), fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
 
               // Courses list
               ...List.generate(courses.length, (index) {
@@ -607,8 +674,8 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                                       Expanded(
                                         child: Text(
                                           course.name,
-                                          style: const TextStyle(
-                                            color: AppColors.textPrimary,
+                                          style: TextStyle(
+                                            color: AppColors.adaptiveTextPrimary(context),
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -649,7 +716,9 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        const Divider(color: AppColors.glassBorder),
+                        Divider(
+                          color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                        ),
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
@@ -706,9 +775,10 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                 );
               }),
             ],
-          );
-        },
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  );
+}
 }

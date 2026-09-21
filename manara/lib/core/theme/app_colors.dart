@@ -64,4 +64,21 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // Dynamic Theme Helpers
+  static bool _resolveIsDark(dynamic target) {
+    if (target is BuildContext) {
+      return Theme.of(target).brightness == Brightness.dark;
+    }
+    return target == true;
+  }
+
+  static Color adaptiveTextPrimary(dynamic target) => _resolveIsDark(target) ? textPrimary : lightTextPrimary;
+  static Color adaptiveTextSecondary(dynamic target) => _resolveIsDark(target) ? textSecondary : lightTextSecondary;
+  static Color adaptiveTextMuted(dynamic target) => _resolveIsDark(target) ? textMuted : lightTextMuted;
+  static Color adaptiveBg(dynamic target) => _resolveIsDark(target) ? darkBg : lightBg;
+  static Color adaptiveSurface(dynamic target) => _resolveIsDark(target) ? darkSurface : lightSurface;
+  static Color adaptiveSurfaceElevated(dynamic target) => _resolveIsDark(target) ? darkSurfaceElevated : lightSurfaceElevated;
+  static Color adaptiveBorder(dynamic target) => _resolveIsDark(target) ? glassBorder : lightBorder;
 }
+

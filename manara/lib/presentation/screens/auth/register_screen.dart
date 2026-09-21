@@ -123,19 +123,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('signup')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('signup'),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.terminal_rounded),
+            icon: Icon(
+              Icons.terminal_rounded,
+              color: isDark ? Colors.white70 : AppColors.lightTextMuted,
+            ),
             tooltip: 'API Logs & Errors',
             onPressed: () => ApiLogsDialog.show(context),
           ),
@@ -208,8 +225,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         // Role selection
                         Text(
                           l10n.translate('role'),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextSecondary(context),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -222,12 +239,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 label: Center(child: Text(l10n.translate('role_student'))),
                                 selected: _selectedRole == UserRole.student,
                                 onSelected: (_) => setState(() => _selectedRole = UserRole.student),
-                                selectedColor: AppColors.primary.withValues(alpha: 0.3),
-                                backgroundColor: AppColors.darkSurfaceElevated,
+                                selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                                backgroundColor: isDark
+                                    ? AppColors.darkSurfaceElevated
+                                    : AppColors.lightSurfaceElevated,
                                 labelStyle: TextStyle(
                                   color: _selectedRole == UserRole.student
                                       ? AppColors.secondary
-                                      : AppColors.textSecondary,
+                                      : AppColors.adaptiveTextSecondary(context),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -238,12 +257,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 label: Center(child: Text(l10n.translate('role_tutor'))),
                                 selected: _selectedRole == UserRole.tutor,
                                 onSelected: (_) => setState(() => _selectedRole = UserRole.tutor),
-                                selectedColor: AppColors.primary.withValues(alpha: 0.3),
-                                backgroundColor: AppColors.darkSurfaceElevated,
+                                selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                                backgroundColor: isDark
+                                    ? AppColors.darkSurfaceElevated
+                                    : AppColors.lightSurfaceElevated,
                                 labelStyle: TextStyle(
                                   color: _selectedRole == UserRole.tutor
                                       ? AppColors.secondary
-                                      : AppColors.textSecondary,
+                                      : AppColors.adaptiveTextSecondary(context),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -289,7 +310,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: AppColors.textMuted,
+                              color: AppColors.adaptiveTextMuted(context),
                               size: 20,
                             ),
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -304,11 +325,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         if (inProgress) ...[
                           const SizedBox(height: 12),
-                          const Center(
+                          Center(
                             child: Text(
                               'Registering account with server, please wait...',
                               style: TextStyle(
-                                color: AppColors.textMuted,
+                                color: AppColors.adaptiveTextMuted(context),
                                 fontSize: 12,
                               ),
                             ),

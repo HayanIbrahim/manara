@@ -79,8 +79,14 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
         }
       },
       builder: (context, state) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<AdminAnnouncementsBloc>().add(AdminFetchAnnouncementsRequested());
+            await Future.delayed(const Duration(milliseconds: 600));
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -151,8 +157,9 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
               ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 

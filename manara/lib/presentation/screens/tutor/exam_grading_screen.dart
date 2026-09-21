@@ -69,14 +69,28 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('grade_exam')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('grade_exam'),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -104,7 +118,7 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: AppColors.secondary.withValues(alpha: 0.2),
+                        backgroundColor: AppColors.secondary.withValues(alpha: 0.15),
                         child: const Icon(Icons.person_outline_rounded, color: AppColors.secondary),
                       ),
                       const SizedBox(width: 14),
@@ -114,8 +128,8 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                           children: [
                             Text(
                               _submission.examTitle ?? 'Exam Submission',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -123,7 +137,10 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Student ID: ${_submission.studentId} • Status: ${_submission.status.name.toUpperCase()}',
-                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextMuted(context),
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -134,9 +151,13 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                 const SizedBox(height: 18),
 
                 // Student's Answers Card
-                const Text(
+                Text(
                   'Submitted Answers',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextPrimary(context),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 10),
 
@@ -152,19 +173,30 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                         children: [
                           Text(
                             'Question #${index + 1}',
-                            style: const TextStyle(color: AppColors.secondary, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           if (ans.choice != null) ...[
                             Text(
                               'Selected Choice: Option ${ans.choice! + 1}',
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                           if (ans.text != null) ...[
                             Text(
                               ans.text!,
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.4),
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ],
@@ -175,9 +207,13 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
 
                 if (_submission.attachmentUrls.isNotEmpty) ...[
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Attachments',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: AppColors.adaptiveTextPrimary(context),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -193,8 +229,8 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                           errorBuilder: (_, _, _) => Container(
                             width: 100,
                             height: 70,
-                            color: AppColors.darkSurfaceElevated,
-                            child: const Icon(Icons.broken_image_rounded, color: AppColors.textMuted),
+                            color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                            child: Icon(Icons.broken_image_rounded, color: AppColors.adaptiveTextMuted(context)),
                           ),
                         ),
                       );
@@ -212,14 +248,18 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Score (0 - 100):',
-                            style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppColors.adaptiveTextPrimary(context),
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2),
+                              color: AppColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppColors.primary),
                             ),
@@ -240,7 +280,7 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                         max: 100,
                         divisions: 100,
                         activeColor: AppColors.secondary,
-                        inactiveColor: AppColors.darkSurfaceElevated,
+                        inactiveColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
                         onChanged: (val) {
                           setState(() {
                             _scoreSlider = val;
@@ -253,13 +293,20 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                       // Written Feedback
                       Text(
                         l10n.translate('feedback'),
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextSecondary(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _feedbackController,
                         maxLines: 4,
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextPrimary(context),
+                          fontSize: 14,
+                        ),
                         decoration: const InputDecoration(
                           hintText: 'Enter constructive grading notes for the student...',
                         ),
@@ -269,15 +316,21 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                       // Publish toggle
                       SwitchListTile(
                         value: _publish,
-                        activeTrackColor: AppColors.secondary,
+                        activeThumbColor: AppColors.secondary,
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           l10n.translate('publish_result'),
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextPrimary(context),
+                            fontSize: 14,
+                          ),
                         ),
-                        subtitle: const Text(
+                        subtitle: Text(
                           'Make results immediately visible to the student',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextMuted(context),
+                            fontSize: 12,
+                          ),
                         ),
                         onChanged: (val) => setState(() => _publish = val),
                       ),

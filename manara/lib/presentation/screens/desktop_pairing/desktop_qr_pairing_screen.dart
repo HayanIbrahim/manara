@@ -68,6 +68,9 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalization.of(context);
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
@@ -77,11 +80,23 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.darkBg,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text(l10n.translate('desktop_qr_title')),
+          backgroundColor: theme.scaffoldBackgroundColor,
+          elevation: 0,
+          title: Text(
+            l10n.translate('desktop_qr_title'),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.adaptiveTextPrimary(context),
+            ),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+            ),
             onPressed: () {
               _countdownTimer?.cancel();
               context.read<DesktopPairingBloc>().add(DesktopPairingResetRequested());
@@ -139,8 +154,8 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
 
                         Text(
                           l10n.translate('desktop_qr_title'),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextPrimary(context),
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -149,7 +164,10 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
                         const SizedBox(height: 8),
                         Text(
                           l10n.translate('desktop_qr_desc'),
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextSecondary(context),
+                            fontSize: 13,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 28),
@@ -178,17 +196,20 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
                                 const SizedBox(height: 12),
                                 Text(
                                   l10n.translate('desktop_qr_expired'),
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextPrimary(context),
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                   'Security policy requires challenge refresh every 3 minutes.',
-                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                  style: TextStyle(
+                                    color: AppColors.adaptiveTextSecondary(context),
+                                    fontSize: 12,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 18),
@@ -286,8 +307,8 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
                               const SizedBox(width: 10),
                               Text(
                                 l10n.translate('desktop_qr_waiting'),
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                style: TextStyle(
+                                  color: AppColors.adaptiveTextSecondary(context),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -311,20 +332,24 @@ class _DesktopQrPairingScreenState extends State<DesktopQrPairingScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: AppColors.darkSurfaceElevated,
+                                color: isDark
+                                    ? AppColors.darkSurfaceElevated
+                                    : AppColors.lightSurfaceElevated,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.glassBorder),
+                                border: Border.all(
+                                  color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.copy_rounded,
-                                      size: 14, color: AppColors.textMuted),
+                                  Icon(Icons.copy_rounded,
+                                      size: 14, color: AppColors.adaptiveTextMuted(context)),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Code: ${state.challenge.length > 16 ? '${state.challenge.substring(0, 16)}...' : state.challenge}',
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
+                                    style: TextStyle(
+                                      color: AppColors.adaptiveTextMuted(context),
                                       fontSize: 11,
                                       fontFamily: 'monospace',
                                     ),

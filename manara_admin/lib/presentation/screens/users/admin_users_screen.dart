@@ -131,8 +131,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         }
       },
       builder: (context, state) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        return RefreshIndicator(
+          onRefresh: () async {
+            _fetchUsers();
+            await Future.delayed(const Duration(milliseconds: 600));
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -330,8 +336,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 

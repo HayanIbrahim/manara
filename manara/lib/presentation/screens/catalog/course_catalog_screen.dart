@@ -142,17 +142,29 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
                   if (state is CatalogLoaded) {
                     final courses = state.courses;
                     if (courses.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<CatalogBloc>().add(const CatalogFetchRequested());
+                          await Future.delayed(const Duration(milliseconds: 600));
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            const Icon(Icons.search_off_rounded, color: AppColors.textMuted, size: 48),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No courses found matching your criteria.',
-                              style: TextStyle(
-                                color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
-                                fontSize: 14,
+                            const SizedBox(height: 120),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off_rounded, color: AppColors.adaptiveTextMuted(isDark), size: 48),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No courses found matching your criteria.',
+                                    style: TextStyle(
+                                      color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -160,36 +172,42 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
                       );
                     }
 
-                    if (isDesktop) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(20),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 340,
-                          childAspectRatio: 1.15,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: courses.length,
-                        itemBuilder: (context, index) {
-                          final course = courses[index];
-                          return AppAnimations.staggeredEntrance(
-                            index: index,
-                            _CourseGridCard(course: course),
-                          );
-                        },
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      itemCount: courses.length,
-                      itemBuilder: (context, index) {
-                        final course = courses[index];
-                        return AppAnimations.staggeredEntrance(
-                          index: index,
-                          _CourseListCard(course: course),
-                        );
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<CatalogBloc>().add(const CatalogFetchRequested());
+                        await Future.delayed(const Duration(milliseconds: 600));
                       },
+                      child: isDesktop
+                          ? GridView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(20),
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 340,
+                                childAspectRatio: 1.15,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                              itemCount: courses.length,
+                              itemBuilder: (context, index) {
+                                final course = courses[index];
+                                return AppAnimations.staggeredEntrance(
+                                  index: index,
+                                  _CourseGridCard(course: course),
+                                );
+                              },
+                            )
+                          : ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              itemCount: courses.length,
+                              itemBuilder: (context, index) {
+                                final course = courses[index];
+                                return AppAnimations.staggeredEntrance(
+                                  index: index,
+                                  _CourseListCard(course: course),
+                                );
+                              },
+                            ),
                     );
                   }
 
@@ -212,6 +230,8 @@ class _CourseListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalization.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return GlassCard(
       onTap: () => context.push('/courses/${course.id}'),
@@ -231,8 +251,8 @@ class _CourseListCard extends StatelessWidget {
                 errorBuilder: (_, _, _) => Container(
                   width: 100,
                   height: 84,
-                  color: AppColors.darkSurfaceElevated,
-                  child: const Icon(Icons.image_outlined, color: AppColors.textMuted),
+                  color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                  child: Icon(Icons.image_outlined, color: AppColors.adaptiveTextMuted(isDark)),
                 ),
               ),
             ),
@@ -244,8 +264,8 @@ class _CourseListCard extends StatelessWidget {
               children: [
                 Text(
                   course.name,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -255,7 +275,7 @@ class _CourseListCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   course.tutorName ?? l10n.translate('tutor'),
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: TextStyle(color: AppColors.adaptiveTextSecondary(isDark), fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -264,7 +284,7 @@ class _CourseListCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       course.ratingAverage.toStringAsFixed(1),
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
                     Text(
@@ -294,6 +314,8 @@ class _CourseGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalization.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return GlassCard(
       onTap: () => context.push('/courses/${course.id}'),
@@ -311,8 +333,8 @@ class _CourseGridCard extends StatelessWidget {
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
-                    color: AppColors.darkSurfaceElevated,
-                    child: const Center(child: Icon(Icons.image_outlined, color: AppColors.textMuted)),
+                    color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                    child: Center(child: Icon(Icons.image_outlined, color: AppColors.adaptiveTextMuted(isDark))),
                   ),
                 ),
               ),
@@ -325,14 +347,14 @@ class _CourseGridCard extends StatelessWidget {
               children: [
                 Text(
                   course.name,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   course.tutorName ?? l10n.translate('tutor'),
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: TextStyle(color: AppColors.adaptiveTextSecondary(isDark), fontSize: 12),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -344,7 +366,7 @@ class _CourseGridCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           course.ratingAverage.toStringAsFixed(1),
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

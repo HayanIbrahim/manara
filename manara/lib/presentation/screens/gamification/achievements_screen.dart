@@ -23,12 +23,32 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('achievements')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('achievements'),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.secondary),
+            tooltip: 'Refresh',
+            onPressed: () {
+              context.read<GamificationBloc>().add(GamificationLoadRequested());
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<GamificationBloc, GamificationState>(
         builder: (context, state) {
@@ -39,12 +59,43 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           if (state is GamificationLoaded) {
             final badges = state.achievements;
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: badges.length,
-              itemBuilder: (context, index) {
-                return AchievementBadgeWidget(achievement: badges[index]);
+            if (badges.isEmpty) {
+              return RefreshIndicator(
+                color: AppColors.secondary,
+                backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                onRefresh: () async {
+                  context.read<GamificationBloc>().add(GamificationLoadRequested());
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                    Center(
+                      child: Text(
+                        'No achievements earned yet. Complete quizzes to unlock badges!',
+                        style: TextStyle(color: AppColors.adaptiveTextSecondary(context)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: AppColors.secondary,
+              backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+              onRefresh: () async {
+                context.read<GamificationBloc>().add(GamificationLoadRequested());
               },
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                itemCount: badges.length,
+                itemBuilder: (context, index) {
+                  return AchievementBadgeWidget(achievement: badges[index]);
+                },
+              ),
             );
           }
 

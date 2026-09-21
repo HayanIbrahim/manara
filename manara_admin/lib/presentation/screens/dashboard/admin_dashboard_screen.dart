@@ -64,54 +64,66 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              _fetchIfAuthenticated();
+              await Future.delayed(const Duration(milliseconds: 600));
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${l10n.translate('dashboard')} — ${adminUser?.displayName ?? 'Admin'}',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Monitor platform metrics, user access bindings, and academic catalogs.',
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Welcome Header
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.vpn_key_rounded, size: 16),
-                        label: Text(l10n.translate('generate_code')),
-                        onPressed: () => context.go('/signup-codes'),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${l10n.translate('dashboard')} — ${adminUser?.displayName ?? 'Admin'}',
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Monitor platform metrics, user access bindings, and academic catalogs.',
+                            style: TextStyle(
+                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.campaign_rounded, size: 16),
-                        label: Text(l10n.translate('announcements')),
-                        onPressed: () => context.go('/announcements'),
+                      Row(
+                        children: [
+                          IconButton.filledTonal(
+                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            tooltip: 'Refresh Dashboard',
+                            onPressed: _fetchIfAuthenticated,
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.vpn_key_rounded, size: 16),
+                            label: Text(l10n.translate('generate_code')),
+                            onPressed: () => context.go('/signup-codes'),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.campaign_rounded, size: 16),
+                            label: Text(l10n.translate('announcements')),
+                            onPressed: () => context.go('/announcements'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
               // KPI Metric Cards Row
               Row(
@@ -448,6 +460,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
         ),
+      ),
       ),
       ),
     );

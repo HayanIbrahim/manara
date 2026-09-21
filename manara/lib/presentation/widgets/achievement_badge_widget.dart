@@ -25,6 +25,8 @@ class AchievementBadgeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isUnlocked = achievement.isUnlocked;
 
     return GlassCard(
@@ -39,9 +41,13 @@ class AchievementBadgeWidget extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: isUnlocked ? AppColors.goldGradient : null,
-              color: isUnlocked ? null : AppColors.darkSurfaceElevated,
+              color: isUnlocked
+                  ? null
+                  : (isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated),
               border: Border.all(
-                color: isUnlocked ? AppColors.gold : AppColors.glassBorder,
+                color: isUnlocked
+                    ? AppColors.gold
+                    : (isDark ? AppColors.glassBorder : AppColors.lightBorder),
                 width: 2,
               ),
               boxShadow: isUnlocked
@@ -56,7 +62,9 @@ class AchievementBadgeWidget extends StatelessWidget {
             ),
             child: Icon(
               _resolveIcon(achievement.badgeIcon),
-              color: isUnlocked ? Colors.black87 : AppColors.textMuted,
+              color: isUnlocked
+                  ? Colors.black87
+                  : AppColors.adaptiveTextMuted(isDark),
               size: 26,
             ),
           ),
@@ -71,7 +79,9 @@ class AchievementBadgeWidget extends StatelessWidget {
                       child: Text(
                         achievement.title,
                         style: TextStyle(
-                          color: isUnlocked ? AppColors.textPrimary : AppColors.textSecondary,
+                          color: isUnlocked
+                              ? theme.colorScheme.onSurface
+                              : AppColors.adaptiveTextSecondary(isDark),
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -80,13 +90,13 @@ class AchievementBadgeWidget extends StatelessWidget {
                     if (isUnlocked)
                       const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 16)
                     else
-                      const Icon(Icons.lock_outline_rounded, color: AppColors.textMuted, size: 16),
+                      Icon(Icons.lock_outline_rounded, color: AppColors.adaptiveTextMuted(isDark), size: 16),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   achievement.description,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  style: TextStyle(color: AppColors.adaptiveTextMuted(isDark), fontSize: 12),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -97,7 +107,7 @@ class AchievementBadgeWidget extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: achievement.progressFraction,
                       minHeight: 4,
-                      backgroundColor: AppColors.darkSurfaceElevated,
+                      backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),

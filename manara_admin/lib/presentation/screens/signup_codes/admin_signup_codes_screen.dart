@@ -83,6 +83,11 @@ class _AdminSignupCodesScreenState extends State<AdminSignupCodesScreen> {
                       ),
                     ],
                   ),
+                  IconButton.filledTonal(
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    tooltip: 'Refresh Signup Codes',
+                    onPressed: () => context.read<AdminSignupCodesBloc>().add(AdminFetchSignupCodesRequested()),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -249,18 +254,36 @@ class _AdminSignupCodesScreenState extends State<AdminSignupCodesScreen> {
                         }).toList();
 
                         if (filtered.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No signup codes found.',
-                              style: TextStyle(
-                                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                              ),
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              context.read<AdminSignupCodesBloc>().add(AdminFetchSignupCodesRequested());
+                              await Future.delayed(const Duration(milliseconds: 600));
+                            },
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                const SizedBox(height: 120),
+                                Center(
+                                  child: Text(
+                                    'No signup codes found.',
+                                    style: TextStyle(
+                                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
 
-                        return SingleChildScrollView(
-                          child: SizedBox(
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<AdminSignupCodesBloc>().add(AdminFetchSignupCodesRequested());
+                            await Future.delayed(const Duration(milliseconds: 600));
+                          },
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SizedBox(
                             width: double.infinity,
                             child: DataTable(
                               headingRowColor: WidgetStateProperty.all(
@@ -414,8 +437,9 @@ class _AdminSignupCodesScreenState extends State<AdminSignupCodesScreen> {
                               }).toList(),
                             ),
                           ),
-                        );
-                      }
+                        ),
+                      );
+                    }
 
                       return const SizedBox.shrink();
                     },

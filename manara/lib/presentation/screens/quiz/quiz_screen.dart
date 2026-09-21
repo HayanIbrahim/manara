@@ -39,14 +39,28 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalization.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.translate('mandatory_quiz')),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        title: Text(
+          l10n.translate('mandatory_quiz'),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adaptiveTextPrimary(context),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(
+            Icons.close_rounded,
+            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -75,7 +89,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 // Top Progress indicator
                 LinearProgressIndicator(
                   value: questions.isNotEmpty ? selected.length / questions.length : 0,
-                  backgroundColor: AppColors.darkSurfaceElevated,
+                  backgroundColor: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
                   valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
                   minHeight: 4,
                 ),
@@ -100,7 +114,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    color: AppColors.primary.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -117,8 +131,8 @@ class _QuizScreenState extends State<QuizScreen> {
                             const SizedBox(height: 12),
                             Text(
                               q.prompt,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary(context),
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -146,11 +160,15 @@ class _QuizScreenState extends State<QuizScreen> {
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
                                       color: isChoiceSelected
-                                          ? AppColors.primary.withValues(alpha: 0.2)
-                                          : AppColors.darkSurfaceElevated,
+                                          ? AppColors.primary.withValues(alpha: 0.15)
+                                          : (isDark
+                                              ? AppColors.darkSurfaceElevated
+                                              : AppColors.lightSurfaceElevated),
                                       borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
-                                        color: isChoiceSelected ? AppColors.secondary : AppColors.glassBorder,
+                                        color: isChoiceSelected
+                                            ? AppColors.secondary
+                                            : (isDark ? AppColors.glassBorder : AppColors.lightGlassBorder),
                                         width: isChoiceSelected ? 1.5 : 1,
                                       ),
                                     ),
@@ -163,7 +181,9 @@ class _QuizScreenState extends State<QuizScreen> {
                                             shape: BoxShape.circle,
                                             color: isChoiceSelected ? AppColors.secondary : Colors.transparent,
                                             border: Border.all(
-                                              color: isChoiceSelected ? AppColors.secondary : AppColors.textMuted,
+                                              color: isChoiceSelected
+                                                  ? AppColors.secondary
+                                                  : AppColors.adaptiveTextMuted(context),
                                             ),
                                           ),
                                           child: isChoiceSelected
@@ -176,8 +196,8 @@ class _QuizScreenState extends State<QuizScreen> {
                                             choiceText,
                                             style: TextStyle(
                                               color: isChoiceSelected
-                                                  ? AppColors.textPrimary
-                                                  : AppColors.textSecondary,
+                                                  ? AppColors.adaptiveTextPrimary(context)
+                                                  : AppColors.adaptiveTextSecondary(context),
                                               fontSize: 14,
                                               fontWeight: isChoiceSelected ? FontWeight.bold : FontWeight.normal,
                                             ),
@@ -199,9 +219,13 @@ class _QuizScreenState extends State<QuizScreen> {
                 // Bottom Submit Bar
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: AppColors.darkSurface,
-                    border: Border(top: BorderSide(color: AppColors.glassBorder)),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                    border: Border(
+                      top: BorderSide(
+                        color: isDark ? AppColors.glassBorder : AppColors.lightGlassBorder,
+                      ),
+                    ),
                   ),
                   child: SafeArea(
                     child: GlowingGlassButton(
@@ -240,8 +264,8 @@ class _QuizScreenState extends State<QuizScreen> {
                       const SizedBox(height: 20),
                       Text(
                         '100% Score! (5/5)',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextPrimary(context),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -250,7 +274,10 @@ class _QuizScreenState extends State<QuizScreen> {
                       Text(
                         l10n.translate('quiz_passed'),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        style: TextStyle(
+                          color: AppColors.adaptiveTextSecondary(context),
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 28),
                       GlowingGlassButton(
@@ -290,8 +317,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 20),
                         Text(
                           'Score: ${state.result.score}% (${state.result.correct}/${state.result.total})',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextPrimary(context),
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
@@ -300,7 +327,10 @@ class _QuizScreenState extends State<QuizScreen> {
                         Text(
                           l10n.translate('quiz_failed'),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextSecondary(context),
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 26),
                         GlowingGlassButton(
@@ -328,10 +358,14 @@ class _QuizScreenState extends State<QuizScreen> {
                   children: [
                     const Icon(Icons.quiz_outlined, size: 52, color: AppColors.secondary),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'No quiz questions published for this lecture yet.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextPrimary(context),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     GlowingGlassButton(

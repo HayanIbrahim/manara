@@ -31,13 +31,16 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+          style: TextStyle(
+            color: AppColors.adaptiveTextSecondary(isDark),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -50,13 +53,13 @@ class CustomTextField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           maxLines: maxLines,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15),
           decoration: InputDecoration(
             hintText: hint,
             helperText: helperText,
-            helperStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            helperStyle: TextStyle(color: AppColors.adaptiveTextMuted(isDark), fontSize: 11),
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: AppColors.textMuted, size: 20)
+                ? Icon(prefixIcon, color: AppColors.adaptiveTextMuted(isDark), size: 20)
                 : null,
             suffixIcon: suffixIcon,
           ),
