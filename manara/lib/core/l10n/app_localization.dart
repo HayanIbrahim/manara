@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+
+class AppLocalization {
+  final Locale locale;
+
+  AppLocalization(this.locale);
+
+  static AppLocalization of(BuildContext context) {
+    return Localizations.of<AppLocalization>(context, AppLocalization) ??
+        AppLocalization(const Locale('ar'));
+  }
+
+  static const _localizedValues = <String, Map<String, String>>{
+    'en': {
+      'app_name': 'Manara',
+      'login': 'Login',
+      'signup': 'Sign Up',
+      'guest_mode': 'Continue as Guest',
+      'username': 'Username',
+      'password': 'Password',
+      'display_name': 'Full Name',
+      'email': 'Email (Optional)',
+      'signup_code': 'Admin Registration Code',
+      'role_student': 'Student',
+      'role_tutor': 'Tutor',
+      'device_id_bound': 'Device Protected',
+      'device_mismatch': 'Device mismatch. Please contact the administrator.',
+      'generate_desktop_qr': 'Pair with Mobile (QR Login)',
+      'desktop_qr_title': 'Temporary Desktop Pairing',
+      'desktop_qr_desc': 'Scan this QR code using your logged-in mobile app to grant temporary desktop access.',
+      'desktop_qr_waiting': 'Waiting for authorization from your phone...',
+      'desktop_qr_approved': 'Authorized! Exchanging secure token...',
+      'desktop_qr_expired': 'QR code has expired. Please refresh.',
+      'desktop_qr_refresh': 'Generate New QR',
+      'mobile_scan_qr': 'Scan Desktop QR',
+      'mobile_approve_desktop': 'Authorize Desktop Login',
+      'mobile_approve_desc': 'Grant access to this temporary desktop session?',
+      'authorize': 'Authorize',
+      'cancel': 'Cancel',
+      'student_dashboard': 'Student Dashboard',
+      'tutor_dashboard': 'Tutor Studio',
+      'catalog': 'Courses',
+      'leaderboard': 'Leaderboard',
+      'achievements': 'Achievements',
+      'announcements': 'Announcements',
+      'profile': 'Profile',
+      'logout': 'Logout',
+      'continue_learning': 'Continue Learning',
+      'enrolled_courses': 'My Courses',
+      'no_enrolled_courses': 'You have not enrolled in any courses yet.',
+      'browse_courses': 'Browse Courses',
+      'search_courses_hint': 'Search courses, subjects, or tutors...',
+      'all_subjects': 'All Subjects',
+      'lectures_count': 'Lectures',
+      'tutor': 'Tutor',
+      'rating': 'Rating',
+      'price': 'Price',
+      'free': 'Free',
+      'curriculum': 'Curriculum',
+      'locked': 'Locked',
+      'mandatory_quiz': 'Mandatory Lecture Quiz',
+      'quiz_requirement': 'You must score 100% (5/5) to unlock the next lecture.',
+      'question': 'Question',
+      'of': 'of',
+      'submit_quiz': 'Submit Answers',
+      'quiz_passed': 'Congratulations! Next lecture unlocked.',
+      'quiz_failed': 'You need 100% to pass. Please review and try again.',
+      'try_again': 'Try Again',
+      'next_lecture': 'Next Lecture',
+      'pdf_notes': 'Lecture Notes (PDF)',
+      'exams': 'Exams',
+      'submit_exam': 'Submit Exam',
+      'written_answer_hint': 'Type your answer here...',
+      'upload_image': 'Attach Image',
+      'exam_submitted': 'Exam submitted successfully for grading!',
+      'exam_results': 'Exam Results',
+      'score': 'Score',
+      'feedback': 'Feedback',
+      'pending_grading': 'Pending Grading',
+      'tutor_manage_courses': 'Manage Courses',
+      'create_course': 'Create Course',
+      'create_lecture': 'Add Lecture',
+      'create_quiz': 'Create Quiz',
+      'create_exam': 'Create Exam',
+      'submissions_to_grade': 'Submissions to Grade',
+      'grade_exam': 'Grade Submission',
+      'publish_result': 'Publish Result',
+      'rate_course': 'Rate Course',
+      'rate_tutor': 'Rate Tutor',
+      'submit_rating': 'Submit Review',
+      'points': 'Points',
+      'rank': 'Rank',
+      'arabic': 'العربية',
+      'english': 'English',
+      'switch_language': 'Language',
+    },
+    'ar': {
+      'app_name': 'منارة',
+      'login': 'تسجيل الدخول',
+      'signup': 'إنشاء حساب جديد',
+      'guest_mode': 'التصفح كزائر',
+      'username': 'اسم المستخدم',
+      'password': 'كلمة المرور',
+      'display_name': 'الاسم الكامل',
+      'email': 'البريد الإلكتروني (اختياري)',
+      'signup_code': 'كود التسجيل من المشرف',
+      'role_student': 'طالب',
+      'role_tutor': 'معلم / محاضر',
+      'device_id_bound': 'الجهاز مقترن ومحمي',
+      'device_mismatch': 'تعذر الدخول: الجهاز غير مطابق للجهاز المسجل. يرجى مراجعة إدارة المنصة.',
+      'generate_desktop_qr': 'الدخول عبر الهاتف (رمز QR)',
+      'desktop_qr_title': 'ربط جلسة سطح المكتب المؤقتة',
+      'desktop_qr_desc': 'امسح رمز الاستجابة السريعة (QR) عبر تطبيق الهاتف للمصادقة وتفعيل الجلسة.',
+      'desktop_qr_waiting': 'في انتظار تفويض الجلسة من هاتفك المحمول...',
+      'desktop_qr_approved': 'تمت الموافقة بنجاح! جاري استلام رمز الدخول...',
+      'desktop_qr_expired': 'انتهت صلاحية الرمز. يرجى التحديث.',
+      'desktop_qr_refresh': 'إنشاء رمز QR جديد',
+      'mobile_scan_qr': 'مسح رمز سطح المكتب',
+      'mobile_approve_desktop': 'تفويض الدخول لسطح المكتب',
+      'mobile_approve_desc': 'هل توافق على منح هذا الحاسوب حق الدخول المؤقت لحسابك؟',
+      'authorize': 'تأكيد التفويض',
+      'cancel': 'إلغاء',
+      'student_dashboard': 'لوحة تحكم الطالب',
+      'tutor_dashboard': 'استوديو المعلم',
+      'catalog': 'المقررات الدراسية',
+      'leaderboard': 'لوحة الشرف',
+      'achievements': 'الأوسمة والإنجازات',
+      'announcements': 'الإعلانات والتنبيهات',
+      'profile': 'الملف الشخصي',
+      'logout': 'تسجيل الخروج',
+      'continue_learning': 'متابعة التعلم',
+      'enrolled_courses': 'دوراتي المشترك بها',
+      'no_enrolled_courses': 'لم تسجل في أي دورة بعد. تصفح المقررات للبدء.',
+      'browse_courses': 'استكشف المقررات',
+      'search_courses_hint': 'ابحث باسم الدورة أو المادة أو المعلم...',
+      'all_subjects': 'جميع المواد',
+      'lectures_count': 'دروس',
+      'tutor': 'المحاضر',
+      'rating': 'التقييم',
+      'price': 'السعر',
+      'free': 'مجاناً',
+      'curriculum': 'المنهج الدراسي',
+      'locked': 'مغلق (أكمل السابق)',
+      'mandatory_quiz': 'اختبار الدرس الإلزامي',
+      'quiz_requirement': 'يجب الحصول على 100% (5 من 5) لفتح الدرس التالي.',
+      'question': 'السؤال',
+      'of': 'من',
+      'submit_quiz': 'تسليم الإجابات',
+      'quiz_passed': 'أحسنت! تم اجتياز الاختبار وفتح المحاضرة التالية.',
+      'quiz_failed': 'تحتاج إلى 100% للاجتياز. راجع المحاضرة وحاول مجدداً.',
+      'try_again': 'إعادة المحاولة',
+      'next_lecture': 'الدرس التالي',
+      'pdf_notes': 'الملخصات والملفات (PDF)',
+      'exams': 'الاختبارات والواجبات',
+      'submit_exam': 'تسليم الاختبار',
+      'written_answer_hint': 'اكتب إجابتك هنا بتفصيل...',
+      'upload_image': 'إرفاق صورة',
+      'exam_submitted': 'تم تسليم الاختبار للمراجعة والتقييم بنجاح!',
+      'exam_results': 'نتائج الاختبارات',
+      'score': 'الدرجة',
+      'feedback': 'ملاحظات المعلم',
+      'pending_grading': 'قيد التصحيح',
+      'tutor_manage_courses': 'إدارة دوراتي',
+      'create_course': 'إضافة دورة جديدة',
+      'create_lecture': 'إضافة درس',
+      'create_quiz': 'إنشاء اختبار الدرس',
+      'create_exam': 'إنشاء اختبار',
+      'submissions_to_grade': 'إجابات الطلاب للتصحيح',
+      'grade_exam': 'تصحيح الإجابة',
+      'publish_result': 'نشر الدرجة للطالب',
+      'rate_course': 'تقييم الدورة',
+      'rate_tutor': 'تقييم المعلم',
+      'submit_rating': 'إرسال التقييم',
+      'points': 'نقطة',
+      'rank': 'الترتيب',
+      'arabic': 'العربية',
+      'english': 'English',
+      'switch_language': 'اللغة',
+    },
+  };
+
+  String translate(String key) {
+    final langCode = locale.languageCode;
+    return _localizedValues[langCode]?[key] ??
+        _localizedValues['ar']?[key] ??
+        key;
+  }
+
+  bool get isRtl => locale.languageCode == 'ar';
+}
+
+class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalization> {
+  const AppLocalizationDelegate();
+
+  @override
+  bool isSupported(Locale locale) => ['en', 'ar'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalization> load(Locale locale) async => AppLocalization(locale);
+
+  @override
+  bool shouldReload(AppLocalizationDelegate old) => false;
+}

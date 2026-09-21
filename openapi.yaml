@@ -1,0 +1,864 @@
+openapi: 3.1.0
+info:
+  title: Educational Platform API
+  version: 1.0.0
+  description: |
+    Backend contract for the Admin, Tutor, Student, guest-catalog, and temporary
+    desktop applications. Protected mobile requests from students and tutors
+    require both a Bearer JWT and the device ID used during registration.
+  contact:
+    name: Backend Team
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.example.com/api/v1
+    description: Production placeholder
+tags:
+  - name: System
+  - name: Authentication
+  - name: Desktop QR
+  - name: Public Catalog
+  - name: Admin
+  - name: Tutor
+  - name: Student
+  - name: Gamification
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Check whether the API process is running
+      operationId: getHealth
+      security: []
+      servers:
+        - url: http://localhost:3000
+          description: Local development server root
+        - url: https://api.example.com
+          description: Production placeholder server root
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status, service]
+                properties:
+                  status: { type: string, const: ok }
+                  service: { type: string, const: educational-platform-api }
+  /auth/admin/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate an administrator
+      operationId: adminLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminLoginRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/AuthSuccess' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a student or tutor using a single-use code
+      description: |
+        Requires a role-specific code created by POST /admin/signup-codes. The
+        device_id field is required in this JSON body; x-device-id does not replace
+        it during signup. Creation consumes the code atomically and returns 201.
+        An exact replay of all account fields after a completed request returns 200;
+        a changed replay returns SIGNUP_CODE_ALREADY_USED.
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '200':
+          description: Exact safe retry of a registration that already completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '201': { $ref: '#/components/responses/AuthSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate a student or tutor on the bound device
+      operationId: login
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/OptionalDeviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/AuthSuccess' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get the authenticated account and session type
+      operationId: getCurrentUser
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses:
+        '200':
+          description: Current session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, sessionType]
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+                  sessionType: { type: string, enum: [admin, mobile, desktop] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /desktop/challenges:
+    post:
+      tags: [Desktop QR]
+      summary: Create a short-lived desktop QR challenge
+      operationId: createDesktopChallenge
+      security: []
+      responses:
+        '201':
+          description: Challenge created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DesktopChallenge' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /desktop/challenges/{challenge}/status:
+    get:
+      tags: [Desktop QR]
+      summary: Poll a desktop challenge
+      operationId: getDesktopChallengeStatus
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Challenge' }]
+      responses:
+        '200':
+          description: Current challenge state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DesktopStatus' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /desktop/challenges/{challenge}/authorize:
+    post:
+      tags: [Desktop QR]
+      summary: Approve a challenge from an authenticated mobile device
+      operationId: authorizeDesktopChallenge
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Challenge'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Challenge approved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DesktopStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /desktop/challenges/{challenge}/exchange:
+    post:
+      tags: [Desktop QR]
+      summary: Exchange an approved challenge for a desktop JWT
+      operationId: exchangeDesktopChallenge
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Challenge' }]
+      responses:
+        '200': { $ref: '#/components/responses/DesktopAuthSuccess' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /desktop/sessions/current:
+    delete:
+      tags: [Desktop QR]
+      summary: Close the current temporary desktop session
+      operationId: closeDesktopSession
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Session closed }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /subjects:
+    get:
+      tags: [Public Catalog]
+      summary: List subjects
+      operationId: listPublicSubjects
+      security: []
+      responses:
+        '200':
+          description: Subject collection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubjectList' }
+  /courses:
+    get:
+      tags: [Public Catalog]
+      summary: Search and paginate published courses
+      operationId: searchCourses
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: Course, subject, or tutor text }
+        - { name: subjectId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - { name: tutorId, in: query, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Paginated published courses
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoursePage' }
+  /courses/{id}:
+    get:
+      tags: [Public Catalog]
+      summary: Get public course details without protected media
+      operationId: getPublicCourse
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Public course
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Course' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tutors/{id}:
+    get:
+      tags: [Public Catalog]
+      summary: Get a tutor's public profile and rating
+      operationId: getPublicTutor
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Tutor profile
+          content: { application/json: { schema: { type: object, additionalProperties: true } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /leaderboard:
+    get:
+      tags: [Gamification]
+      summary: Get the top 100 active students
+      operationId: getLeaderboard
+      security: []
+      responses:
+        '200':
+          description: Ranked students
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/LeaderboardEntry' }
+
+  /admin/subjects:
+    get:
+      tags: [Admin]
+      summary: List subjects for administration
+      operationId: listAdminSubjects
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Subjects, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectList' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+    post:
+      tags: [Admin]
+      summary: Create a subject
+      operationId: createSubject
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectInput' } } } }
+      responses: { '201': { description: Created subject, content: { application/json: { schema: { $ref: '#/components/schemas/Subject' } } } }, '409': { $ref: '#/components/responses/Conflict' }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /admin/subjects/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update a subject
+      operationId: updateSubject
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectPatch' } } } }
+      responses: { '200': { description: Updated subject, content: { application/json: { schema: { $ref: '#/components/schemas/Subject' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    delete:
+      tags: [Admin]
+      summary: Delete an unused subject
+      operationId: deleteSubject
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '204': { description: Deleted }, '409': { $ref: '#/components/responses/Conflict' } }
+  /admin/signup-codes:
+    get:
+      tags: [Admin]
+      summary: List signup-code metadata
+      operationId: listSignupCodes
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Signup codes, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/SignupCodeMetadata' } } } } } } } }
+    post:
+      tags: [Admin]
+      summary: Generate a single-use role-specific signup code
+      operationId: generateSignupCode
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SignupCodeRequest' } } } }
+      responses: { '201': { description: Plaintext code returned once, content: { application/json: { schema: { $ref: '#/components/schemas/SignupCodeCreated' } } } }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Search accounts
+      operationId: listUsers
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/Role' } }
+        - { name: status, in: query, schema: { type: string, enum: [ACTIVE, DEACTIVATED] } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Safe account records, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/User' } } } } } } } }
+  /admin/users/{id}/status:
+    patch:
+      tags: [Admin]
+      summary: Activate or deactivate an account and revoke existing tokens
+      operationId: updateUserStatus
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [ACTIVE, DEACTIVATED] } } } } } }
+      responses: { '200': { description: Updated user, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }, '400': { $ref: '#/components/responses/BadRequest' } }
+  /admin/users/{id}/device-reset:
+    post:
+      tags: [Admin]
+      summary: Clear a device binding and revoke active sessions
+      operationId: resetUserDevice
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Reset account, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /admin/tutors/{id}/subjects/{subjectId}:
+    put:
+      tags: [Admin]
+      summary: Assign a subject to a tutor
+      operationId: assignTutorSubject
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/SubjectId' }]
+      responses: { '200': { description: Assignment }, '404': { $ref: '#/components/responses/NotFound' } }
+    delete:
+      tags: [Admin]
+      summary: Remove a tutor subject assignment
+      operationId: unassignTutorSubject
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/SubjectId' }]
+      responses: { '204': { description: Assignment removed } }
+  /admin/students/{id}/courses/{courseId}:
+    put:
+      tags: [Admin]
+      summary: Grant or reactivate course access
+      operationId: grantStudentCourse
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/CourseId' }]
+      responses: { '200': { description: Active enrollment, content: { application/json: { schema: { $ref: '#/components/schemas/Enrollment' } } } } }
+    delete:
+      tags: [Admin]
+      summary: Revoke course access
+      operationId: revokeStudentCourse
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/CourseId' }]
+      responses: { '204': { description: Access revoked } }
+  /admin/announcements:
+    get:
+      tags: [Admin]
+      summary: List all announcements
+      operationId: listAdminAnnouncements
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Announcements, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/Announcement' } } } } } } } }
+    post:
+      tags: [Admin]
+      summary: Create a targeted announcement
+      operationId: createAnnouncement
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AnnouncementInput' } } } }
+      responses: { '201': { description: Created announcement, content: { application/json: { schema: { $ref: '#/components/schemas/Announcement' } } } }, '422': { $ref: '#/components/responses/ValidationError' } }
+
+  /tutor/courses:
+    get:
+      tags: [Tutor]
+      summary: List courses owned by the authenticated tutor
+      operationId: listTutorCourses
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Tutor courses, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/Course' } } } } } } } }
+    post:
+      tags: [Tutor]
+      summary: Create a course under an assigned subject
+      operationId: createCourse
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CourseInput' } } } }
+      responses: { '201': { description: Created course, content: { application/json: { schema: { $ref: '#/components/schemas/Course' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /tutor/courses/{id}:
+    patch:
+      tags: [Tutor]
+      summary: Update or publish an owned course
+      operationId: updateCourse
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CoursePatch' } } } }
+      responses: { '200': { description: Updated course, content: { application/json: { schema: { $ref: '#/components/schemas/Course' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /tutor/courses/{id}/lectures:
+    post:
+      tags: [Tutor]
+      summary: Add an unpublished lecture
+      operationId: createLecture
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LectureInput' } } } }
+      responses: { '201': { description: Created lecture, content: { application/json: { schema: { $ref: '#/components/schemas/Lecture' } } } }, '409': { $ref: '#/components/responses/Conflict' } }
+  /tutor/lectures/{id}:
+    patch:
+      tags: [Tutor]
+      summary: Update or publish a lecture
+      description: A lecture cannot be published before its mandatory quiz exists.
+      operationId: updateLecture
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LecturePatch' } } } }
+      responses: { '200': { description: Updated lecture, content: { application/json: { schema: { $ref: '#/components/schemas/Lecture' } } } }, '409': { $ref: '#/components/responses/Conflict' } }
+    delete:
+      tags: [Tutor]
+      summary: Delete an owned lecture
+      operationId: deleteLecture
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      responses: { '204': { description: Lecture deleted } }
+  /tutor/lectures/{id}/quiz:
+    put:
+      tags: [Tutor]
+      summary: Create or replace a mandatory lecture quiz
+      operationId: putLectureQuiz
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/QuizInput' } } } }
+      responses: { '200': { description: Saved quiz, content: { application/json: { schema: { $ref: '#/components/schemas/Quiz' } } } }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /tutor/courses/{id}/exams:
+    post:
+      tags: [Tutor]
+      summary: Create an exam for an owned course
+      operationId: createExam
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExamInput' } } } }
+      responses: { '201': { description: Created exam, content: { application/json: { schema: { $ref: '#/components/schemas/Exam' } } } } }
+  /tutor/exams/{id}:
+    patch:
+      tags: [Tutor]
+      summary: Update or publish an exam
+      operationId: updateExam
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExamPatch' } } } }
+      responses: { '200': { description: Updated exam, content: { application/json: { schema: { $ref: '#/components/schemas/Exam' } } } } }
+  /tutor/exams/{id}/submissions:
+    get:
+      tags: [Tutor]
+      summary: List submissions for an owned exam
+      operationId: listExamSubmissions
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Exam submissions, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/ExamSubmission' } } } } } } } }
+  /tutor/submissions/{id}/grade:
+    patch:
+      tags: [Tutor]
+      summary: Grade and optionally publish an exam result
+      operationId: gradeExamSubmission
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GradeInput' } } } }
+      responses: { '200': { description: Graded submission, content: { application/json: { schema: { $ref: '#/components/schemas/ExamSubmission' } } } } }
+
+  /student/courses:
+    get:
+      tags: [Student]
+      summary: List manually granted courses
+      operationId: listStudentCourses
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Granted courses, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/Course' } } } } } } } }
+  /student/courses/{id}/learning:
+    get:
+      tags: [Student]
+      summary: Get protected course content and sequential unlock state
+      operationId: getCourseLearningState
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Learning state with redacted answer keys, content: { application/json: { schema: { type: object, properties: { course: { $ref: '#/components/schemas/CourseLearning' } } } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /student/lectures/{id}/quiz-attempts:
+    post:
+      tags: [Student]
+      summary: Submit a mandatory quiz attempt
+      operationId: submitQuizAttempt
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/QuizAttemptInput' } } } }
+      responses: { '200': { description: Score and unlock result, content: { application/json: { schema: { $ref: '#/components/schemas/QuizAttemptResult' } } } }, '403': { $ref: '#/components/responses/Forbidden' }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /student/exams/{id}/submissions:
+    post:
+      tags: [Student]
+      summary: Submit an exam once
+      operationId: submitExam
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExamSubmissionInput' } } } }
+      responses: { '201': { description: Submitted exam, content: { application/json: { schema: { $ref: '#/components/schemas/ExamSubmission' } } } }, '409': { $ref: '#/components/responses/Conflict' }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /student/exam-results:
+    get:
+      tags: [Student]
+      summary: List published exam results
+      operationId: listExamResults
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Published results, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/ExamSubmission' } } } } } } } }
+  /student/ratings/course/{id}:
+    put:
+      tags: [Student]
+      summary: Create or replace the student's course rating
+      operationId: rateCourse
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RatingInput' } } } }
+      responses: { '200': { description: Saved rating, content: { application/json: { schema: { $ref: '#/components/schemas/Rating' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /student/ratings/tutor/{id}:
+    put:
+      tags: [Student]
+      summary: Create or replace the student's tutor rating
+      operationId: rateTutor
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/DeviceId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RatingInput' } } } }
+      responses: { '200': { description: Saved rating, content: { application/json: { schema: { $ref: '#/components/schemas/Rating' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /student/announcements:
+    get:
+      tags: [Student]
+      summary: List announcements visible to the student
+      operationId: listStudentAnnouncements
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Visible announcements, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/Announcement' } } } } } } } }
+  /student/achievements:
+    get:
+      tags: [Student, Gamification]
+      summary: Synchronize and list earned achievements
+      operationId: listStudentAchievements
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/DeviceId' }]
+      responses: { '200': { description: Earned achievements, content: { application/json: { schema: { type: object, properties: { items: { type: array, items: { type: object, additionalProperties: true } } } } } } } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ObjectId' }
+    SubjectId:
+      name: subjectId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ObjectId' }
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ObjectId' }
+    Challenge:
+      name: challenge
+      in: path
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 256 }
+    DeviceId:
+      name: x-device-id
+      in: header
+      required: false
+      description: Required for STUDENT/TUTOR mobile JWTs; omit for admin and desktop JWTs.
+      schema: { type: string, minLength: 16, maxLength: 256 }
+    OptionalDeviceId:
+      name: x-device-id
+      in: header
+      required: false
+      description: Preferred location for the login device ID; body device_id is the fallback.
+      schema: { type: string, minLength: 16, maxLength: 256 }
+  responses:
+    AuthSuccess:
+      description: Authentication successful
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AuthResponse' }
+    DesktopAuthSuccess:
+      description: Temporary desktop authentication successful
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AuthResponse'
+              - type: object
+                required: [expiresAt]
+                properties: { expiresAt: { type: string, format: date-time } }
+    BadRequest: { description: Invalid workflow or required value, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Unauthorized: { description: Missing, invalid, expired, or revoked authentication, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Forbidden: { description: Device, role, ownership, or enrollment denied, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    NotFound: { description: Resource not found, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Conflict: { description: State or uniqueness conflict, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    ValidationError: { description: Payload validation failed, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    RateLimited:
+      description: Too many requests. The rate-limit middleware currently sends plain text; Retry-After may be present.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying, when supplied by the rate limiter.
+          schema: { type: string }
+      content:
+        text/html:
+          schema: { type: string }
+    ServiceUnavailable: { description: Temporary registration transaction conflict; retry the same request, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+  schemas:
+    ObjectId: { type: string, pattern: '^[a-fA-F0-9]{24}$', examples: ['64b000000000000000000001'] }
+    Role: { type: string, enum: [ADMIN, TUTOR, STUDENT] }
+    User:
+      type: object
+      required: [id, username, displayName, role, status, points, deviceBound]
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        username: { type: string }
+        email: { type: [string, 'null'], format: email }
+        displayName: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        status: { type: string, enum: [ACTIVE, DEACTIVATED] }
+        points: { type: integer }
+        deviceBound: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AdminLoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties: { username: { type: string, minLength: 3, maxLength: 64 }, password: { type: string, minLength: 8, maxLength: 256 } }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 64 }
+        password: { type: string, minLength: 8, maxLength: 256 }
+        device_id: { type: string, minLength: 16, maxLength: 256, deprecated: true, description: Use x-device-id header when possible. }
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [signupCode, role, username, displayName, password, device_id]
+      properties:
+        signupCode: { type: string, minLength: 8, maxLength: 128, description: Plaintext single-use code returned once by the Admin endpoint, example: EDU-STUDENT-opaque-value }
+        role: { type: string, enum: [TUTOR, STUDENT], description: Must exactly match the role assigned to the signup code. }
+        username: { type: string, minLength: 3, maxLength: 64, description: Trimmed and normalized to lowercase before storage. }
+        email: { type: string, format: email, description: Optional; normalized to lowercase and unique when supplied. }
+        displayName: { type: string, minLength: 1, maxLength: 100 }
+        password: { type: string, minLength: 10, maxLength: 256 }
+        device_id: { type: string, minLength: 16, maxLength: 256, description: Required stable random mobile-device ID. Send this same value as x-device-id after signup. }
+    AuthResponse:
+      type: object
+      required: [accessToken, tokenType, user]
+      properties: { accessToken: { type: string }, tokenType: { type: string, const: Bearer }, user: { $ref: '#/components/schemas/User' } }
+    DesktopChallenge:
+      type: object
+      required: [challenge, expiresAt]
+      properties: { challenge: { type: string }, expiresAt: { type: string, format: date-time } }
+    DesktopStatus:
+      type: object
+      required: [status, expiresAt]
+      properties: { status: { type: string, enum: [PENDING, APPROVED, CONSUMED, CLOSED, EXPIRED] }, expiresAt: { type: string, format: date-time } }
+    Subject:
+      type: object
+      required: [id, name, createdAt]
+      properties: { id: { $ref: '#/components/schemas/ObjectId' }, name: { type: string }, description: { type: [string, 'null'] }, imageUrl: { type: [string, 'null'], format: uri }, createdAt: { type: string, format: date-time } }
+    SubjectInput:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties: { name: { type: string, minLength: 1, maxLength: 100 }, description: { type: string, maxLength: 1000 }, imageUrl: { type: string, format: uri } }
+    SubjectPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties: { name: { type: string, minLength: 1, maxLength: 100 }, description: { type: [string, 'null'], maxLength: 1000 }, imageUrl: { type: [string, 'null'], format: uri } }
+    SubjectList: { type: object, properties: { items: { type: array, items: { $ref: '#/components/schemas/Subject' } } } }
+    Course:
+      type: object
+      required: [id, name, description, imageUrl, price, tutorId, subjectId, published, videoCount, ratingAverage, ratingCount]
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        name: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        price: { type: number, description: Course price stored as a Prisma Float. }
+        tutorId: { $ref: '#/components/schemas/ObjectId' }
+        subjectId: { $ref: '#/components/schemas/ObjectId' }
+        published: { type: boolean }
+        videoCount: { type: integer }
+        ratingAverage: { type: number }
+        ratingCount: { type: integer }
+        tutor: { type: object, additionalProperties: true }
+        subject: { $ref: '#/components/schemas/Subject' }
+    CourseInput:
+      type: object
+      additionalProperties: false
+      required: [name, description, imageUrl, price, subjectId]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, minLength: 1, maxLength: 5000 }
+        imageUrl: { type: string, format: uri }
+        price: { type: number, minimum: 0 }
+        subjectId: { $ref: '#/components/schemas/ObjectId' }
+        published: { type: boolean, default: false }
+    CoursePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties: { name: { type: string }, description: { type: string }, imageUrl: { type: string, format: uri }, price: { type: number, minimum: 0 }, published: { type: boolean } }
+    Pagination:
+      type: object
+      required: [page, limit, total, pages]
+      properties: { page: { type: integer }, limit: { type: integer }, total: { type: integer }, pages: { type: integer } }
+    CoursePage: { type: object, required: [items, pagination], properties: { items: { type: array, items: { $ref: '#/components/schemas/Course' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }
+    Lecture:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        courseId: { $ref: '#/components/schemas/ObjectId' }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        position: { type: integer }
+        videoUrl: { type: string, format: uri }
+        pdfUrls: { type: array, items: { type: string, format: uri } }
+        points: { type: integer }
+        published: { type: boolean }
+        locked: { type: boolean }
+    LectureInput:
+      type: object
+      additionalProperties: false
+      required: [title, position, videoUrl]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 3000 }
+        position: { type: integer, minimum: 1 }
+        videoUrl: { type: string, format: uri }
+        pdfUrls: { type: array, maxItems: 20, items: { type: string, format: uri }, default: [] }
+        points: { type: integer, minimum: 0, maximum: 1000, default: 10 }
+        published: { type: boolean, const: false, default: false }
+    LecturePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties: { title: { type: string }, description: { type: [string, 'null'] }, position: { type: integer, minimum: 1 }, videoUrl: { type: string, format: uri }, pdfUrls: { type: array, items: { type: string, format: uri } }, points: { type: integer }, published: { type: boolean } }
+    QuizQuestion:
+      type: object
+      required: [prompt, choices]
+      properties: { prompt: { type: string }, choices: { type: array, minItems: 4, maxItems: 4, items: { type: string } }, correctChoice: { type: integer, minimum: 0, maximum: 3, writeOnly: true } }
+    QuizInput:
+      type: object
+      required: [questions]
+      properties: { questions: { type: array, minItems: 5, maxItems: 100, items: { $ref: '#/components/schemas/QuizQuestion' } } }
+    Quiz:
+      type: object
+      properties: { id: { $ref: '#/components/schemas/ObjectId' }, lectureId: { $ref: '#/components/schemas/ObjectId' }, passPercent: { type: integer, const: 100 }, questions: { type: array, items: { $ref: '#/components/schemas/QuizQuestion' } } }
+    ExamQuestion:
+      oneOf:
+        - type: object
+          required: [id, type, prompt, choices, correctChoice]
+          properties: { id: { type: string }, type: { const: MULTIPLE_CHOICE }, prompt: { type: string }, choices: { type: array, minItems: 4, maxItems: 4, items: { type: string } }, correctChoice: { type: integer, minimum: 0, maximum: 3, writeOnly: true }, imageUrls: { type: array, items: { type: string, format: uri } } }
+        - type: object
+          required: [id, type, prompt]
+          properties: { id: { type: string }, type: { const: WRITTEN }, prompt: { type: string }, imageUrls: { type: array, items: { type: string, format: uri } } }
+      discriminator: { propertyName: type }
+    ExamInput:
+      type: object
+      required: [title, questions]
+      properties: { title: { type: string }, instructions: { type: string }, points: { type: integer, default: 50 }, published: { type: boolean, default: false }, questions: { type: array, minItems: 1, items: { $ref: '#/components/schemas/ExamQuestion' } } }
+    ExamPatch:
+      type: object
+      minProperties: 1
+      properties: { title: { type: string }, instructions: { type: [string, 'null'] }, points: { type: integer }, published: { type: boolean }, questions: { type: array, minItems: 1, items: { $ref: '#/components/schemas/ExamQuestion' } } }
+    Exam:
+      allOf:
+        - $ref: '#/components/schemas/ExamInput'
+        - type: object
+          properties: { id: { $ref: '#/components/schemas/ObjectId' }, courseId: { $ref: '#/components/schemas/ObjectId' }, tutorId: { $ref: '#/components/schemas/ObjectId' } }
+    ExamAnswer:
+      type: object
+      required: [questionId]
+      properties: { questionId: { type: string }, choice: { type: integer, minimum: 0, maximum: 3 }, text: { type: string, maxLength: 10000 } }
+    ExamSubmissionInput:
+      type: object
+      required: [answers]
+      properties: { answers: { type: array, items: { $ref: '#/components/schemas/ExamAnswer' } }, attachmentUrls: { type: array, maxItems: 20, items: { type: string, format: uri }, default: [] } }
+    ExamSubmission:
+      allOf:
+        - $ref: '#/components/schemas/ExamSubmissionInput'
+        - type: object
+          properties: { id: { $ref: '#/components/schemas/ObjectId' }, examId: { $ref: '#/components/schemas/ObjectId' }, studentId: { $ref: '#/components/schemas/ObjectId' }, status: { type: string, enum: [SUBMITTED, GRADED, PUBLISHED] }, score: { type: [number, 'null'] }, feedback: { type: [string, 'null'] }, submittedAt: { type: string, format: date-time }, gradedAt: { type: [string, 'null'], format: date-time }, publishedAt: { type: [string, 'null'], format: date-time } }
+    GradeInput:
+      type: object
+      required: [score]
+      properties: { score: { type: number, minimum: 0, maximum: 100 }, feedback: { type: string, maxLength: 5000 }, publish: { type: boolean, default: false } }
+    QuizAttemptInput: { type: object, required: [answers], properties: { answers: { type: array, minItems: 5, maxItems: 100, items: { type: integer, minimum: 0, maximum: 3 } } } }
+    QuizAttemptResult:
+      type: object
+      required: [score, correct, total, passed, nextLectureUnlocked, progress]
+      properties: { score: { type: integer }, correct: { type: integer }, total: { type: integer }, passed: { type: boolean }, nextLectureUnlocked: { type: boolean }, progress: { type: object, additionalProperties: true } }
+    CourseLearning:
+      allOf:
+        - $ref: '#/components/schemas/Course'
+        - type: object
+          properties: { lectures: { type: array, items: { $ref: '#/components/schemas/Lecture' } }, exams: { type: array, items: { $ref: '#/components/schemas/Exam' } } }
+    RatingInput: { type: object, required: [value], properties: { value: { type: integer, minimum: 1, maximum: 5 }, comment: { type: string, maxLength: 2000 } } }
+    Rating:
+      allOf:
+        - $ref: '#/components/schemas/RatingInput'
+        - type: object
+          properties: { id: { $ref: '#/components/schemas/ObjectId' }, studentId: { $ref: '#/components/schemas/ObjectId' }, courseId: { $ref: '#/components/schemas/ObjectId' }, tutorId: { $ref: '#/components/schemas/ObjectId' }, createdAt: { type: string, format: date-time }, updatedAt: { type: string, format: date-time } }
+    AnnouncementInput:
+      type: object
+      required: [title, body, audience]
+      properties: { title: { type: string, maxLength: 150 }, body: { type: string, maxLength: 5000 }, audience: { type: string, enum: [ALL, COURSE, STUDENTS] }, courseIds: { type: array, items: { $ref: '#/components/schemas/ObjectId' }, default: [] }, studentIds: { type: array, items: { $ref: '#/components/schemas/ObjectId' }, default: [] }, expiresAt: { type: string, format: date-time } }
+    Announcement:
+      allOf:
+        - $ref: '#/components/schemas/AnnouncementInput'
+        - type: object
+          properties: { id: { $ref: '#/components/schemas/ObjectId' }, createdById: { $ref: '#/components/schemas/ObjectId' }, createdAt: { type: string, format: date-time } }
+    SignupCodeRequest: { type: object, required: [role], properties: { role: { type: string, enum: [TUTOR, STUDENT] }, expiresInHours: { type: integer, minimum: 1, maximum: 720, default: 72 } } }
+    SignupCodeCreated: { type: object, properties: { id: { $ref: '#/components/schemas/ObjectId' }, code: { type: string, description: Returned exactly once. }, role: { type: string, enum: [TUTOR, STUDENT] }, expiresAt: { type: string, format: date-time } } }
+    SignupCodeMetadata: { type: object, properties: { id: { $ref: '#/components/schemas/ObjectId' }, role: { type: string, enum: [TUTOR, STUDENT] }, expiresAt: { type: string, format: date-time }, usedAt: { type: [string, 'null'], format: date-time }, usedById: { oneOf: [{ $ref: '#/components/schemas/ObjectId' }, { type: 'null' }] }, createdAt: { type: string, format: date-time } } }
+    Enrollment: { type: object, properties: { id: { $ref: '#/components/schemas/ObjectId' }, studentId: { $ref: '#/components/schemas/ObjectId' }, courseId: { $ref: '#/components/schemas/ObjectId' }, grantedById: { $ref: '#/components/schemas/ObjectId' }, active: { type: boolean }, grantedAt: { type: string, format: date-time } } }
+    LeaderboardEntry: { type: object, required: [rank, id, displayName, points], properties: { rank: { type: integer }, id: { $ref: '#/components/schemas/ObjectId' }, displayName: { type: string }, points: { type: integer } } }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties: { code: { type: string }, message: { type: string }, details: { type: object, additionalProperties: true } }
