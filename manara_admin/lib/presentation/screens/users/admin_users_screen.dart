@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/l10n/app_localization.dart';
 import '../../../core/theme/app_colors.dart';
@@ -42,6 +43,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   void _showResetDeviceDialog(AccountUserEntity user) {
     final l10n = AppLocalization.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -77,9 +79,44 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 children: [
                   const Icon(Icons.person_outline_rounded, size: 18),
                   const SizedBox(width: 8),
-                  Text(
-                    '${user.displayName} (@${user.username})',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${user.displayName} (@${user.username})',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Text(
+                              'ID: ${user.id}',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 11,
+                                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            InkWell(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: user.id));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Copied User ID: ${user.id}'),
+                                    duration: const Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(4),
+                              child: const Icon(Icons.copy_rounded, size: 13, color: AppColors.primary),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -321,6 +358,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           columnSpacing: 24,
                           columns: [
                             const DataColumn(label: Text('USER / IDENTITY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                            const DataColumn(label: Text('USER ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                             DataColumn(label: Text(l10n.translate('role').toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                             DataColumn(label: Text(l10n.translate('status').toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                             const DataColumn(label: Text('HARDWARE DEVICE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
@@ -392,9 +430,108 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       fontSize: 11,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        'ID: ${user.id}',
+                        style: TextStyle(
+                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: user.id));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('User ID copied: ${user.id}'),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 11,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
+          ),
+        ),
+
+        // User ID cell with copy button
+        DataCell(
+          Tooltip(
+            message: 'Click to copy User ID: ${user.id}',
+            child: InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: user.id));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Text('User ID copied: ${user.id}'),
+                      ],
+                    ),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SelectableText(
+                      user.id,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        Icons.copy_rounded,
+                        size: 13,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
 
