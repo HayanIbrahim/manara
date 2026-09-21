@@ -71,8 +71,10 @@ paths:
         Requires a role-specific code created by POST /admin/signup-codes. The
         device_id field is required in this JSON body; x-device-id does not replace
         it during signup. Creation consumes the code atomically and returns 201.
-        An exact replay of all account fields after a completed request returns 200;
-        a changed replay returns SIGNUP_CODE_ALREADY_USED.
+        A replay by the same username, email, password, and device returns 200;
+        displayName may differ, but the stored value is unchanged. A code used
+        by another account returns SIGNUP_CODE_ALREADY_USED. A used code with
+        no linked account returns SIGNUP_CODE_ACCOUNT_MISSING; issue a new code.
       operationId: register
       security: []
       requestBody:
@@ -82,7 +84,7 @@ paths:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
         '200':
-          description: Exact safe retry of a registration that already completed
+          description: Safe retry by the same registered account and device
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AuthResponse' }

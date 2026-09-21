@@ -156,10 +156,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             String msg = state.errorMessage!;
             final upper = msg.toUpperCase();
             if (upper.contains('SIGNUP_CODE_ALREADY_USED') ||
+                upper.contains('SIGNUP_CODE_ACCOUNT_MISSING') ||
                 upper.contains('CONSUMED BY ANOTHER') ||
                 upper.contains('ALREADY BEEN USED') ||
-                upper.contains('ALREADY USED')) {
-              msg = 'This signup code has already been used. Please generate a new single-use code from the Admin portal.';
+                upper.contains('ALREADY USED') ||
+                upper.contains('ACCOUNT_MISSING')) {
+              msg = 'This signup code has already been consumed or has no linked account. Please request a new single-use code from the Admin portal.';
             } else if (upper.contains('INVALID_SIGNUP_CODE') || upper.contains('EXPIRED')) {
               msg = 'The signup code is invalid or has expired.';
             } else if (upper.contains('SIGNUP_CODE_ROLE_MISMATCH') || upper.contains('ROLE MISMATCH')) {

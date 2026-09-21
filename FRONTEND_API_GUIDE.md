@@ -161,8 +161,10 @@ and [OpenAPI schemas](./openapi.yaml).
 - `POST /auth/register` — Public. Body: `signupCode`, `role` (`STUDENT` or
   `TUTOR`), `username`, optional `email`, `displayName`, `password` (at least 10
   characters), and `device_id` (16–256 characters). Returns `201` with auth
-  data; an identical retry returns `200`. A used code with changed details
-  returns `409 SIGNUP_CODE_ALREADY_USED`.
+  data; a retry by the same username, email, password, and device returns `200`
+  (the display name may differ). A code used by another account returns
+  `409 SIGNUP_CODE_ALREADY_USED`. A used code with no linked account returns
+  `409 SIGNUP_CODE_ACCOUNT_MISSING`; ask the admin for a fresh code.
 - `POST /auth/login` — Public. Body: `username`, `password`, and either body
   `device_id` or header `x-device-id`. Returns `200` with auth data for a student
   or tutor. Wrong credentials return `401 INVALID_CREDENTIALS`; a different
@@ -340,13 +342,18 @@ session, the matching `x-device-id` header.
 ### Signup and account recovery
 
 1. An admin creates a role-specific code with `POST /admin/signup-codes` and
-   delivers the returned plaintext code to the intended user.
+   delivers the returned plaintext code to one intended user. Create a separate
+   code for each student; codes are never shared or reused.
 2. The mobile client generates and stores a stable installation ID, then sends
    it as `device_id` in `POST /auth/register`.
 3. Store the returned access token for this session. Send the stored
    installation ID as `x-device-id` on future protected mobile requests.
 4. When a token expires, show login; there is no refresh endpoint. If an admin
    resets the device, login with username, password, and the new device ID.
+5. If registration returns `SIGNUP_CODE_ALREADY_USED` or
+   `SIGNUP_CODE_ACCOUNT_MISSING`, request a fresh code from the admin. An
+   identical retry by the original account can return `200` after a lost
+   response. Check the `error.code` field, not the English error message.
 
 ### Publish a course and start learning
 
